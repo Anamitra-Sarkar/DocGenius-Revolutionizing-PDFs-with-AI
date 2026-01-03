@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+python-dotenv
+langchain
+openai
+faiss-cpu==1.7.4
+pydantic
+aiofiles
+python-multipart
+requests
+PyPDF2
