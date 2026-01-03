@@ -1,5 +1,5 @@
 import React, { useState } from 'react'
-import { apiFetch } from '../lib/apiClient'
+import { apiFetch, ApiError } from '../lib/apiClient'
 
 export default function PdfUpload({ onUploaded }: { onUploaded: (id: string) => void }) {
   const [loading, setLoading] = useState(false)
@@ -11,15 +11,21 @@ export default function PdfUpload({ onUploaded }: { onUploaded: (id: string) => 
     setSuccess(null)
     const file = e.target.files?.[0]
     if (!file) return
+    
     setLoading(true)
     const form = new FormData()
     form.append('file', file)
+    
     try {
       const data = await apiFetch('/pdf/upload', { method: 'POST', body: form })
       onUploaded(data.document_id)
-      setSuccess('Uploaded')
-    } catch (err: any) {
-      setError(err.message || 'Upload failed')
+      setSuccess('PDF uploaded successfully!')
+    } catch (err) {
+      if (err instanceof ApiError) {
+        setError(err.message)
+      } else {
+        setError('Upload failed. Please try again.')
+      }
     } finally {
       setLoading(false)
     }
@@ -27,11 +33,19 @@ export default function PdfUpload({ onUploaded }: { onUploaded: (id: string) => 
 
   return (
     <section>
-      <label style={{ display: 'block', fontWeight: 600 }}>Upload PDF</label>
-      <input type="file" accept="application/pdf" onChange={handleFile} />
-      {loading && <div>Uploading...</div>}
-      {error && <div style={{ color: 'red' }}>{error}</div>}
-      {success && <div style={{ color: 'green' }}>{success}</div>}
+      <label style={{ display: 'block', fontWeight: 600, marginBottom: 8, fontSize: 14 }}>
+        Upload PDF Document
+      </label>
+      <input 
+        type="file" 
+        accept="application/pdf" 
+        onChange={handleFile} 
+        disabled={loading}
+        style={{ marginBottom: 8 }}
+      />
+      {loading && <div style={{ color: '#0066cc', marginTop: 8 }}>Uploading and processing...</div>}
+      {error && <div style={{ color: '#dc2626', marginTop: 8, fontWeight: 500 }}>{error}</div>}
+      {success && <div style={{ color: '#16a34a', marginTop: 8, fontWeight: 500 }}>{success}</div>}
     </section>
   )
 }

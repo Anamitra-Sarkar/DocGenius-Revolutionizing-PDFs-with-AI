@@ -1,5 +1,10 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request, status
+from fastapi.responses import JSONResponse
+from fastapi.exceptions import RequestValidationError
+from starlette.exceptions import HTTPException as StarletteHTTPException
+from contextlib import asynccontextmanager
 import os
+import sys
 from dotenv import load_dotenv
 
 # Only load a local .env during development. Production must provide env vars.
@@ -11,8 +16,34 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import pdf as pdf_router
 from .api import gemini as gemini_router
 
-app = FastAPI(title="DocGenius Backend")
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
+    env = os.getenv("DOCGENIUS_ENV", "development")
+    print(f"[DocGenius] Starting up", file=sys.stderr)
+    print(f"[DocGenius] Environment: {env}", file=sys.stderr)
+    
+    # Log provider status
+    openai_key = os.getenv("OPENAI_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY")
+    print(f"[DocGenius] OpenAI API: {'configured' if openai_key else 'NOT configured'}", file=sys.stderr)
+    print(f"[DocGenius] Gemini API: {'configured' if gemini_key else 'NOT configured'}", file=sys.stderr)
+    
+    # Log vector store location
+    data_dir = os.path.join(os.getcwd(), "data", "vectorstores")
+    print(f"[DocGenius] Vector store directory: {data_dir}", file=sys.stderr)
+    print(f"[DocGenius] Startup complete", file=sys.stderr)
+    
+    yield
+    
+    # Shutdown
+    print(f"[DocGenius] Shutting down", file=sys.stderr)
+
+
+app = FastAPI(title="DocGenius Backend", lifespan=lifespan)
+
+# CORS configuration
 cors_env = os.getenv("CORS_ALLOWED_ORIGINS")
 if cors_env:
     cors_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
@@ -30,10 +61,46 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
+# Centralized exception handlers
+@app.exception_handler(StarletteHTTPException)
+async def http_exception_handler(request: Request, exc: StarletteHTTPException):
+    """Normalize HTTP exceptions to JSON"""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"error": exc.detail, "status_code": exc.status_code}
+    )
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(request: Request, exc: RequestValidationError):
+    """Normalize validation errors to JSON"""
+    return JSONResponse(
+        status_code=status.HTTP_422_UNPROCESSABLE_ENTITY,
+        content={"error": "Validation error", "details": exc.errors(), "status_code": 422}
+    )
+
+@app.exception_handler(Exception)
+async def general_exception_handler(request: Request, exc: Exception):
+    """Catch-all exception handler - never leak stack traces in production"""
+    env = os.getenv("DOCGENIUS_ENV", "development")
+    
+    # In development, show the actual error for debugging
+    if env != "production":
+        error_detail = str(exc)
+    else:
+        # In production, return a generic error message
+        error_detail = "Internal server error"
+    
+    # Always log the actual error to stderr for debugging
+    print(f"[DocGenius] ERROR: {type(exc).__name__}: {exc}", file=sys.stderr)
+    
+    return JSONResponse(
+        status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+        content={"error": error_detail, "status_code": 500}
+    )
 
 @app.get("/health")
 def health():
-    return {"status": "ok"}
+    return {"status": "ok", "service": "docgenius"}
 
 
 app.include_router(pdf_router.router, prefix="/pdf", tags=["pdf"])
