@@ -58,9 +58,9 @@ DocGenius/
    # Required
    OPENAI_API_KEY=sk-...
    
-   # Optional
+   # Optional (defaults to 'development' if not set)
    GEMINI_API_KEY=your-gemini-key
-   DOCGENIUS_ENV=development
+   DOCGENIUS_ENV=development  # Use 'production' when deploying
    ```
 
 5. **Run the backend:**

@@ -2,6 +2,7 @@ from fastapi import FastAPI, Request, status
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from starlette.exceptions import HTTPException as StarletteHTTPException
+from contextlib import asynccontextmanager
 import os
 import sys
 from dotenv import load_dotenv
@@ -15,11 +16,10 @@ from fastapi.middleware.cors import CORSMiddleware
 from .api import pdf as pdf_router
 from .api import gemini as gemini_router
 
-app = FastAPI(title="DocGenius Backend")
 
-# Startup logging
-@app.on_event("startup")
-async def startup_event():
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    # Startup
     env = os.getenv("DOCGENIUS_ENV", "development")
     print(f"[DocGenius] Starting up", file=sys.stderr)
     print(f"[DocGenius] Environment: {env}", file=sys.stderr)
@@ -34,6 +34,14 @@ async def startup_event():
     data_dir = os.path.join(os.getcwd(), "data", "vectorstores")
     print(f"[DocGenius] Vector store directory: {data_dir}", file=sys.stderr)
     print(f"[DocGenius] Startup complete", file=sys.stderr)
+    
+    yield
+    
+    # Shutdown
+    print(f"[DocGenius] Shutting down", file=sys.stderr)
+
+
+app = FastAPI(title="DocGenius Backend", lifespan=lifespan)
 
 # CORS configuration
 cors_env = os.getenv("CORS_ALLOWED_ORIGINS")
