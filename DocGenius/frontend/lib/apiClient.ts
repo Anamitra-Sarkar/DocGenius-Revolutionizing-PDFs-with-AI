@@ -3,15 +3,21 @@
  * All backend communication must go through this module
  */
 
-// Get API base URL from environment
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL
-
-// Validate that API_BASE_URL is configured
-if (!API_BASE_URL) {
-  throw new Error(
-    'NEXT_PUBLIC_API_BASE_URL environment variable is required but not set. ' +
-    'Please configure it in your .env.local file or deployment settings.'
-  )
+/**
+ * Get API base URL from environment
+ * @throws Error if NEXT_PUBLIC_API_BASE_URL is not configured
+ */
+function getApiBaseUrl(): string {
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL
+  
+  if (!baseUrl) {
+    throw new Error(
+      'NEXT_PUBLIC_API_BASE_URL environment variable is required but not set. ' +
+      'Please configure it in your .env.local file or deployment settings.'
+    )
+  }
+  
+  return baseUrl
 }
 
 /**
@@ -40,7 +46,7 @@ export async function apiFetch<T = any>(
   endpoint: string,
   options: RequestInit = {}
 ): Promise<T> {
-  const url = `${API_BASE_URL}${endpoint}`
+  const url = `${getApiBaseUrl()}${endpoint}`
   
   // Set default headers for JSON requests
   const headers: Record<string, string> = {}
@@ -53,8 +59,9 @@ export async function apiFetch<T = any>(
     })
   }
   
-  // Only add Content-Type for JSON bodies (not FormData)
-  if (options.body && typeof options.body === 'string') {
+  // Only add Content-Type for JSON bodies (string bodies assumed to be JSON from JSON.stringify)
+  // FormData and other body types will set their own Content-Type
+  if (options.body && typeof options.body === 'string' && !headers['Content-Type']) {
     headers['Content-Type'] = 'application/json'
   }
   
@@ -93,11 +100,15 @@ export async function apiFetch<T = any>(
       throw error
     }
     
-    // Handle network errors
-    if (error instanceof TypeError && error.message.includes('fetch')) {
-      throw new ApiError(
-        'Unable to connect to the server. Please check your connection and try again.'
-      )
+    // Handle network errors - check for common indicators
+    if (error instanceof TypeError) {
+      // Network errors are typically TypeErrors with specific characteristics
+      const errorStr = error.message.toLowerCase()
+      if (errorStr.includes('fetch') || errorStr.includes('network') || errorStr.includes('failed to fetch')) {
+        throw new ApiError(
+          'Unable to connect to the server. Please check your connection and try again.'
+        )
+      }
     }
     
     // Handle other errors
