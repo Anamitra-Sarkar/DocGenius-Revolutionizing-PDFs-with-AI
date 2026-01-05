@@ -1,11 +1,5 @@
 import os
-import openai
 from .vector_store import load_vector_store
-
-openai_api_key = os.getenv("OPENAI_API_KEY")
-if openai_api_key:
-    openai.api_key = openai_api_key
-
 
 def answer_question(document_id: str, question: str) -> str:
     # Load vector store and run similarity search
@@ -13,20 +7,35 @@ def answer_question(document_id: str, question: str) -> str:
     docs = vs.similarity_search(question, k=4)
     context = "\n\n".join([d.page_content for d in docs])
 
-    prompt = (
+    prompt_text = (
         "You are a helpful assistant. Use the following document context to answer the question. "
         "If the answer is not contained in the context, say you don't know.\n\n" +
         f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
     )
 
-    if not openai_api_key:
-        raise EnvironmentError("OPENAI_API_KEY not configured")
+    openai_key = os.getenv("OPENAI_API_KEY")
+    gemini_key = os.getenv("GEMINI_API_KEY")
 
-    resp = openai.ChatCompletion.create(
-        model="gpt-3.5-turbo",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.0,
-        max_tokens=512,
-    )
-    answer = resp["choices"][0]["message"]["content"].strip()
-    return answer
+    try:
+        if openai_key:
+            from langchain_community.chat_models import ChatOpenAI
+            llm = ChatOpenAI(temperature=0.0, model="gpt-3.5-turbo", openai_api_key=openai_key)
+        elif gemini_key:
+            from langchain_google_genai import ChatGoogleGenerativeAI
+            llm = ChatGoogleGenerativeAI(model="gemini-1.5-flash", google_api_key=gemini_key, temperature=0.0)
+        else:
+            # Fallback for testing without keys
+            return (
+                "I see you don't have an API key configured. Here is a simulated answer based on the context:\n\n"
+                f"{context[:200]}...\n\n"
+                "(Please configure OPENAI_API_KEY or GEMINI_API_KEY in .env for real AI responses)"
+            )
+
+        from langchain.schema import HumanMessage
+        messages = [HumanMessage(content=prompt_text)]
+        
+        response = llm.invoke(messages)
+        return response.content
+
+    except Exception as e:
+        return f"I encountered an error while generating the answer: {str(e)}"

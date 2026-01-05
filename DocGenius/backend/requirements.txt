@@ -9,3 +9,4 @@ aiofiles
 python-multipart
 requests
 PyPDF2
+langchain-google-genai
