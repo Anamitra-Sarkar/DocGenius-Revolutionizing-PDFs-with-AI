@@ -48,10 +48,13 @@ cors_env = os.getenv("CORS_ALLOWED_ORIGINS")
 if cors_env:
     cors_origins = [o.strip() for o in cors_env.split(",") if o.strip()]
 else:
-    # In development allow all; in production require explicit origins
+    # In development allow all; in production use the known frontend URL
+    # Hardcoded frontend URL: https://doc-genius-revolutionizing-pd-fs-wi.vercel.app
+    # This is intentionally hardcoded to work without environment variables as per deployment requirements.
     if os.getenv("DOCGENIUS_ENV") == "production":
-        raise RuntimeError("CORS_ALLOWED_ORIGINS must be set in production")
-    cors_origins = ["*"]
+        cors_origins = ["https://doc-genius-revolutionizing-pd-fs-wi.vercel.app"]
+    else:
+        cors_origins = ["*"]
 
 app.add_middleware(
     CORSMiddleware,

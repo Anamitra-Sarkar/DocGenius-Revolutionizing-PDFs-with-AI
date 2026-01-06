@@ -32,7 +32,50 @@ export interface GenerationTemplate {
   icon: string
 }
 
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000"
+// Hardcoded backend URL for deployment
+// Production URL: https://docgenius-revolutionizing-pdfs-with-ai.onrender.com
+// This is intentionally hardcoded to work without environment variables as per deployment requirements.
+// For local development, it falls back to localhost:8000 automatically.
+const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
+  ? "http://localhost:8000" 
+  : "https://docgenius-revolutionizing-pdfs-with-ai.onrender.com")
+
+// Mock data for initial UI state
+export const mockDocuments: Document[] = [
+  {
+    id: "1",
+    name: "Getting Started Guide.pdf",
+    size: 245760,
+    uploadedAt: new Date("2024-01-15"),
+    status: "indexed",
+    pageCount: 12,
+  },
+  {
+    id: "2",
+    name: "API Documentation.pdf",
+    size: 512000,
+    uploadedAt: new Date("2024-01-14"),
+    status: "indexed",
+    pageCount: 24,
+  },
+  {
+    id: "3",
+    name: "User Manual.pdf",
+    size: 1024000,
+    uploadedAt: new Date("2024-01-13"),
+    status: "indexed",
+    pageCount: 48,
+  },
+]
+
+export const mockMessages: Message[] = [
+  {
+    id: "1",
+    role: "assistant",
+    content: "Hello! I've analyzed your document. Feel free to ask me anything about it.",
+    timestamp: new Date(),
+  },
+]
 
 export const generationTemplates: GenerationTemplate[] = [
   {
