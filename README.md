@@ -6,6 +6,14 @@ DocGenius combines OpenAI embeddings with vector search to enable intelligent Q&
 
 ---
 
+## 🚀 Quick Links
+
+- **[Quick Deployment Guide](./QUICKSTART.md)** - Deploy to production in 10 minutes
+- **[Detailed Deployment Guide](./DEPLOYMENT.md)** - Complete deployment documentation
+- **Local Development** - See below
+
+---
+
 ## 🏗️ Architecture
 
 ```
@@ -100,7 +108,46 @@ DocGenius/
 
 ## 📦 Production Deployment
 
-### Backend (Render)
+### ✨ Ready to Deploy!
+
+This repository is **pre-configured** for immediate deployment to Vercel (frontend) and Render (backend).
+
+**No manual environment variable configuration needed for connectivity!**
+
+### Quick Deploy
+
+1. **Backend (Render)**: 5 minutes
+   - Root Directory: `/` (leave empty)
+   - Build Command: `pip install -r requirements.txt`
+   - Start Command: `python start_server.py`
+   - Required Env Vars: `DOCGENIUS_ENV=production`, `OPENAI_API_KEY=sk-...`
+
+2. **Frontend (Vercel)**: 3 minutes
+   - Root Directory: `DocGenius/frontend`
+   - Build Command: `pnpm run build` (auto-detected)
+   - Env Vars: **None required!** ✅
+
+### 📚 Detailed Guides
+
+- **[QUICKSTART.md](./QUICKSTART.md)** - Step-by-step deployment in 10 minutes
+- **[DEPLOYMENT.md](./DEPLOYMENT.md)** - Comprehensive deployment documentation with troubleshooting
+
+### What's Included
+
+✅ All build errors fixed  
+✅ Frontend and backend pre-connected  
+✅ Dependencies pinned for security  
+✅ CORS properly configured  
+✅ Deployment configurations included  
+
+---
+
+## 📦 Legacy Deployment Notes (For Reference)
+
+<details>
+<summary>Click to expand legacy deployment instructions</summary>
+
+### Backend (Render) - Old Method
 
 1. **Create a new Web Service on Render**
    - Connect your GitHub repository
@@ -125,7 +172,7 @@ DocGenius/
 5. **Verify:** Visit `https://your-backend.onrender.com/health`
    - Should return: `{"status":"ok","service":"docgenius"}`
 
-### Frontend (Vercel)
+### Frontend (Vercel) - Old Method
 
 1. **Import Project on Vercel**
    - Connect your GitHub repository
@@ -147,9 +194,28 @@ DocGenius/
 5. **Verify:** Visit your Vercel URL
    - Health status badge should show "● Online"
 
+</details>
+
 ---
 
 ## 🔐 Environment Variables
+
+### ✨ New Simplified Configuration
+
+**Frontend**: No environment variables required! The backend URL is auto-configured based on the deployment environment.
+
+**Backend Required**:
+- `DOCGENIUS_ENV=production` - Enables production mode
+- `OPENAI_API_KEY=sk-...` - Your OpenAI API key
+
+**Backend Optional**:
+- `GEMINI_API_KEY=...` - Your Gemini API key (for text generation)
+- `CORS_ALLOWED_ORIGINS=...` - Override default frontend URL if needed
+
+### Legacy Environment Variables (For Reference)
+
+<details>
+<summary>Click to expand legacy environment variable configuration</summary>
 
 ### Backend (Required)
 
@@ -170,6 +236,8 @@ DocGenius/
 | Variable | Description | Example |
 |----------|-------------|---------|
 | `NEXT_PUBLIC_API_BASE_URL` | Backend API base URL | `http://localhost:8000` or `https://api.onrender.com` |
+
+</details>
 
 ---
 
