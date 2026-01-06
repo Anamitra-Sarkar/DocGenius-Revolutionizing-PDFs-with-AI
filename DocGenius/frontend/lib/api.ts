@@ -33,6 +33,9 @@ export interface GenerationTemplate {
 }
 
 // Hardcoded backend URL for deployment
+// Production URL: https://docgenius-revolutionizing-pdfs-with-ai.onrender.com
+// This is intentionally hardcoded to work without environment variables as per deployment requirements.
+// For local development, it falls back to localhost:8000 automatically.
 const API_URL = process.env.NEXT_PUBLIC_API_URL || (typeof window !== 'undefined' && window.location.hostname === 'localhost' 
   ? "http://localhost:8000" 
   : "https://docgenius-revolutionizing-pdfs-with-ai.onrender.com")
