@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: docgenius-backend
+    runtime: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python start_server.py
+    envVars:
+      - key: DOCGENIUS_ENV
+        value: production
+      - key: OPENAI_API_KEY
+        sync: false
+      - key: GEMINI_API_KEY
+        sync: false
