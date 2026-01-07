@@ -21,9 +21,13 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), 'DocGenius'))
 # Change to DocGenius directory for proper imports
 os.chdir(os.path.join(os.path.dirname(__file__), 'DocGenius'))
 
+# Import the app object directly (not as a string) so uvicorn uses our sys.path
+from backend.app import app
+
 # Now import and run uvicorn
 import uvicorn
 
 if __name__ == "__main__":
     port = int(os.getenv("PORT", 8000))
-    uvicorn.run("backend.app:app", host="0.0.0.0", port=port)
+    # Pass the app object directly instead of a string path
+    uvicorn.run(app, host="0.0.0.0", port=port)
